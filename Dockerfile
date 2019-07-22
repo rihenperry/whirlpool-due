@@ -21,7 +21,7 @@ RUN pip3 install -r requirements.txt
 
 COPY scripts/ scripts/
 COPY logs/ logs/
-COPY urlfilter/ urlfilter/
+COPY due/ due/
 
 # docker image for dev target
 FROM whirlpool-due-base as whirlpool-due-dev
