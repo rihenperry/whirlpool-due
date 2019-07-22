@@ -1,0 +1,10 @@
+.git/
+.github/
+
+.gitignore
+__pycache__
+*.py[co]
+.gitmodules
+docker-compose.buil.yml
+
+due/settings.example.py
