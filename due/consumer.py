@@ -1,5 +1,5 @@
 # sys imports
-import pickle
+import json
 from functools import partial
 
 # local imports
@@ -15,7 +15,7 @@ def consume_from_urlfilter_queue(channel, session):
 def on_msg_callback(channel, method_frame, header_frame, body, db_session):
      print('delivery tag {}'.format(method_frame.delivery_tag))
      print('header_frame {}'.format(header_frame))
-     print('msg body {}'.format(body))
+     print('msg body {}'.format(json.loads(body)))
 
      # do some processing with dbsession
      #
@@ -36,7 +36,7 @@ def on_msg_callback(channel, method_frame, header_frame, body, db_session):
          "3": [{"url": "http://ex3.com/xyz/def", "type": "nc"}]
      };
 
-     bmsg = pickle.dumps(msg)
+     bmsg = json.dumps(msg).encode('utf-8')
      pub_confirm = publisher.publish_to_urlfrontier_queue(channel, bmsg)
      if pub_confirm:
          channel.basic_ack(delivery_tag=method_frame.delivery_tag)

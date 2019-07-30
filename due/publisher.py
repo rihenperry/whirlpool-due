@@ -10,7 +10,7 @@ def publish_to_urlfrontier_queue(channel, msg):
                               routing_key='due_p.to.urlfrontier_c',
                               body=msg,
                               properties=pika.BasicProperties(content_type='application/json',
-                                                              delivery_mode=1),
+                                                              delivery_mode=2),
                               mandatory=True)
         pub_confirm = True
     except pika.exceptions.UnroutableError as push_fail_err:
