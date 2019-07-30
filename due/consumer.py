@@ -31,8 +31,10 @@ def on_msg_callback(channel, method_frame, header_frame, body, db_session):
 
      # finally send message by call publisher
      msg = {
-         'urls': ['http://a1.com', 'http://a2.com', 'http://a3.com']
-     }
+         "1": [{"type": "c", "url": "http://ex1.com/hola"}],
+         "2": [{"url": "http://ex4.com/new", "type": "nc"}, {"type": "c", "url": "http://ex10.com"}],
+         "3": [{"url": "http://ex3.com/xyz/def", "type": "nc"}]
+     };
 
      bmsg = pickle.dumps(msg)
      pub_confirm = publisher.publish_to_urlfrontier_queue(channel, bmsg)
