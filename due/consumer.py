@@ -4,18 +4,21 @@ from functools import partial
 
 # local imports
 import publisher
+from utils import UrlfilterLogging
+
+log = UrlfilterLogging().getLogger()
 
 # whirlpool-urlfilter consume
 def consume_from_urlfilter_queue(channel, session):
-    print('invoked {0}'.format(consume_from_urlfilter_queue.__name__))
+    log.info('invoked {0}'.format(consume_from_urlfilter_queue.__name__))
     on_msg_callback_with_session = partial(on_msg_callback, db_session=session)
     channel.basic_consume('due.q', on_msg_callback_with_session)
-    print('consumer listening for messages on due.q')
+    log.info('consumer listening for messages on due.q')
 
 def on_msg_callback(channel, method_frame, header_frame, body, db_session):
-     print('delivery tag {}'.format(method_frame.delivery_tag))
-     print('header_frame {}'.format(header_frame))
-     print('msg body {}'.format(json.loads(body)))
+     log.info('delivery tag {}'.format(method_frame.delivery_tag))
+     log.info('header_frame {}'.format(header_frame))
+     log.info('msg body {}'.format(json.loads(body)))
 
      # do some processing with dbsession
      #
@@ -23,9 +26,9 @@ def on_msg_callback(channel, method_frame, header_frame, body, db_session):
      try:
          # db_session.query(FooBar).update({"x": 5})
          db_session.commit()
-         print('work processed. session committed')
+         log.info('work processed. session committed')
      except:
-         print('db session failed')
+         log.error('db session failed')
          db_session.rollback()
          raise
 
@@ -40,7 +43,7 @@ def on_msg_callback(channel, method_frame, header_frame, body, db_session):
      pub_confirm = publisher.publish_to_urlfrontier_queue(channel, bmsg)
      if pub_confirm:
          channel.basic_ack(delivery_tag=method_frame.delivery_tag)
-         print('message from urlfrontier.q acknowledged')
+         log.info('message from urlfrontier.q acknowledged')
      else:
          channel.basic_nack(delivery_tag=method_frame.delivery_tag)
-         print('message from urlfrontier.q acknowledgement failed')
+         log.error('message from urlfrontier.q acknowledgement failed')

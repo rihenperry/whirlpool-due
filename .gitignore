@@ -3,3 +3,4 @@ __pycache__/
 *.py[co]
 prod-docker-compose.yml
 due/settings.py
+logs/*

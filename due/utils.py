@@ -1,14 +1,73 @@
 # import sys libs
 import os, logging
+import logging
+from logging.handlers import RotatingFileHandler
+from logging import handlers
+
+import threading
+import functools
 
 # import third-party libs
 from pika import PlainCredentials, ConnectionParameters
 from pika import BlockingConnection
+from coloredlogging import ColoredFormatter, formatter_message
 
+lock = threading.Lock()
+
+
+def synchronized(lock):
+    """decorator to synchronize instance method"""
+    def wrapper(f):
+        @functools.wraps(f)
+        def inner_wrapper(*args, **kw):
+            with lock:
+                return f(*args, **kw)
+        return inner_wrapper
+    return wrapper
+
+
+class Singleton(type):
+    _instances = {}
+
+    @synchronized(lock)
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class UrlfilterLogging(metaclass=Singleton):
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+        change_formatter = "[$BOLD%(asctime)s:%(threadName)s-20s$RESET][%(levelname)-1s]  %(message)s ($BOLD%(filename)s$RESET:%(lineno)d)"
+        formatter = logging.Formatter('%(asctime)s:%(threadName)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s')
+
+        CHECK_COLOR_FORMAT = formatter_message(change_formatter, True)
+        color_format = ColoredFormatter(CHECK_COLOR_FORMAT)
+
+        # enable file logging
+        filepath = os.path.join('logs', 'rotating.log')
+        file_handler = RotatingFileHandler(filepath, maxBytes=(1048576*50), backupCount=10)
+        file_handler.setLevel(logging.ERROR)
+        file_handler.setFormatter(formatter)
+
+        # enable stream logging
+        console = logging.StreamHandler()
+        console.setFormatter(color_format)
+
+        self.logger.addHandler(file_handler)
+        self.logger.addHandler(console)
+
+    def getLogger(self):
+        return self.logger
+
+
+log = UrlfilterLogging().getLogger()
 
 def auth_rmq():
     from settings import RMQ
-    print('importing rabbitmq settings ok...')
+    log.info('importing rabbitmq settings ok...')
 
     creds = PlainCredentials(RMQ['username'], RMQ['password'])
     params = ConnectionParameters(host=RMQ['hostname'],
@@ -17,13 +76,13 @@ def auth_rmq():
                                   credentials=creds)
 
     conn = BlockingConnection(params)
-    print('authenticated to rabbitmq as user: {u}, node: {h}, vhost: {v}'.format(u=RMQ['username'],
+    log.info('authenticated to rabbitmq as user: {u}, node: {h}, vhost: {v}'.format(u=RMQ['username'],
                                                                                  h=RMQ['hostname'],
                                                                                  v=RMQ['vhost']))
     channel = conn.channel()
     channel.confirm_delivery()
     channel.basic_qos(prefetch_count=1)
-    print('publish message confirmation delivery enabled. prefetch count set to {}'.format(1))
+    log.info('publish message confirmation delivery enabled. prefetch count set to {}'.format(1))
     return (conn, channel)
 
 def auth_db():
@@ -35,7 +94,7 @@ def auth_db():
     session = None
     if os.getenv('PY_ENV') == 'development':
         dev_creds = DATABASES['dev']
-        print('connecting to dev database {0} '.format(dev_creds['hostname']))
+        log.info('connecting to dev database {0} '.format(dev_creds['hostname']))
 
         postgres_conn_str = 'postgresql+psycopg2://{uname}:{pwd}@{host}:{port}/{db}'.format(
             uname=dev_creds['username'],
@@ -52,11 +111,11 @@ def auth_db():
         db_conn = postgres_engine.connect()
         session = Session(bind=db_conn)
 
-        print('authentication to {0} database as user: {1} ....ok'.format(dev_creds['hostname'],
+        log.info('authentication to {0} database as user: {1} ....ok'.format(dev_creds['hostname'],
                                                                           dev_creds['username']))
         return session
     elif os.getenv('PY_ENV') == 'production':
-        print('connection to {1} database'.format(os.getenv('PY_ENV')))
+        log.info('connection to {1} database'.format(os.getenv('PY_ENV')))
         return session
     else:
         raise LookupError('database environment not defined')
