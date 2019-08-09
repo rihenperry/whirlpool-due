@@ -92,30 +92,44 @@ def auth_db():
     from settings import DATABASES
 
     session = None
+    postgres_conn_str = 'postgresql+psycopg2://{uname}:{pwd}@{host}:{port}/{db}'
+    auth_stmt = 'authentication to {0} database as user: {1} ....ok'
+
     if os.getenv('PY_ENV') == 'development':
         dev_creds = DATABASES['dev']
         log.info('connecting to dev database {0} '.format(dev_creds['hostname']))
 
-        postgres_conn_str = 'postgresql+psycopg2://{uname}:{pwd}@{host}:{port}/{db}'.format(
+        postgres_conn_str = postgres_conn_str.format(
             uname=dev_creds['username'],
             pwd=dev_creds['password'],
             host=dev_creds['hostname'],
             port=dev_creds['port'],
             db=dev_creds['dbname'])
-        postgres_engine = create_engine(postgres_conn_str)
 
-        # create a configured session class
-        Session = sessionmaker(bind=postgres_engine)
-
-        # create a session
-        db_conn = postgres_engine.connect()
-        session = Session(bind=db_conn)
-
-        log.info('authentication to {0} database as user: {1} ....ok'.format(dev_creds['hostname'],
-                                                                          dev_creds['username']))
-        return session
+        auth_stmt = auth_stmt.format(dev_creds['hostname'], dev_creds['username'])
     elif os.getenv('PY_ENV') == 'production':
         log.info('connection to {1} database'.format(os.getenv('PY_ENV')))
-        return session
+
+        postgres_conn_str = postgres_conn_str.format(
+            uname=os.getenv('RDS_USER'),
+            pwd=os.getenv('RDS_PWD'),
+            host=dev_os.getenv('RDS_ENDPOINT'),
+            port=os.getenv('RDS_PORT'),
+            db=os.getenv('RDS_DB'))
+
+        auth_stmt = auth_stmt.format(os.getenv('RDS_ENDPOINT'), os.getenv('RDS_USER'))
     else:
         raise LookupError('database environment not defined')
+
+    postgres_engine = create_engine(postgres_conn_str)
+
+    # create a configured session class
+    Session = sessionmaker(bind=postgres_engine)
+
+    # create a session
+    db_conn = postgres_engine.connect()
+    session = Session(bind=db_conn)
+
+    log.info(auth_stmt)
+
+    return session

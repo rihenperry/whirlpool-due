@@ -27,3 +27,9 @@ push-dev:
 
 push-prod:
 	docker push rihbyne/whirlpool-due-prod:latest
+
+tag-dev:
+	docker tag whirlpool-due-dev:latest rihbyne/whirlpool-due-dev:latest
+
+tag-prod:
+	docker tag whirlpool-due-prod:latest rihbyne/whirlpool-due-prod:latest
