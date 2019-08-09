@@ -5,10 +5,10 @@ quick-up:
 	docker-compose -f docker-compose.build.yml run --rm quick-up
 
 dev-build:
-	docker build --no-cache -t whirlpool-due-dev:latest --target whirlpool-due-dev .
+	docker build -t whirlpool-due-dev:latest --target whirlpool-due-dev .
 
 prod-build:
-	docker build --no-cache -t whirlpool-due-prod:latest --target whirlpool-due-prod .
+	docker build -t whirlpool-due-prod:latest --target whirlpool-due-prod .
 
 dev-up:
 	docker-compose -f dev-docker-compose.yml up --build -d

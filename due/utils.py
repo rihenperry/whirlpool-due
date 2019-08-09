@@ -97,7 +97,7 @@ def auth_db():
 
     if os.getenv('PY_ENV') == 'development':
         dev_creds = DATABASES['dev']
-        log.info('connecting to dev database {0} '.format(dev_creds['hostname']))
+        log.info('connecting to database {0} '.format(dev_creds['hostname']))
 
         postgres_conn_str = postgres_conn_str.format(
             uname=dev_creds['username'],
@@ -108,12 +108,12 @@ def auth_db():
 
         auth_stmt = auth_stmt.format(dev_creds['hostname'], dev_creds['username'])
     elif os.getenv('PY_ENV') == 'production':
-        log.info('connection to {1} database'.format(os.getenv('PY_ENV')))
+        log.info('connection to database {0}'.format(os.getenv('PY_ENV')))
 
         postgres_conn_str = postgres_conn_str.format(
             uname=os.getenv('RDS_USER'),
             pwd=os.getenv('RDS_PWD'),
-            host=dev_os.getenv('RDS_ENDPOINT'),
+            host=os.getenv('RDS_ENDPOINT'),
             port=os.getenv('RDS_PORT'),
             db=os.getenv('RDS_DB'))
 

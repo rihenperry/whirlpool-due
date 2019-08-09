@@ -1,5 +1,5 @@
 # sys libs
-import sys
+import sys, traceback
 
 # dependency libs
 import pika
@@ -26,6 +26,7 @@ def main():
             conn.close()
     except LookupError as lookup_err:
         log.error('LookupError {}, stopping...'.format(lookup_err))
+        traceback.print_exc(file=sys.stdout)
         sys.exit()
 
     except pika.exceptions.ConnectionClosedByBroker as broker_stopped:
