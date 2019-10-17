@@ -133,3 +133,22 @@ def auth_db():
     log.info(auth_stmt)
 
     return session
+
+def auth_memcache_db():
+    from pymemcache.client.base import Client
+    from settings import MEMCACHE
+
+    auth_stmt = 'connecting to {0} memcached instance. host: {1} '
+    client = None
+
+    if os.getenv('PY_ENV') == 'development':
+        auth_stmt = auth_stmt.format(os.getenv('PY_ENV'), MEMCACHE['hostname'])
+        client = Client((MEMCACHE['hostname'], MEMCACHE['port']))
+    elif os.getenv('PY_ENV') == 'production':
+        auth_stmt = auth_stmt.format(os.getenv('PY_ENV'), os.getenv('MEMCACHE_ENDPOINT'))
+        client = Client((os.getenv('MEMCACHE_ENDPOINT'), os.getenv('MEMCACHE_PORT')))
+    else:
+        raise LookupError('unable to find memcached config')
+
+    log.info(auth_stmt)
+    return client

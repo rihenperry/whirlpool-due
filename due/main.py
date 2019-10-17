@@ -17,7 +17,9 @@ def main():
     try:
         due_session = utils.auth_db()
         conn, channel = utils.auth_rmq()
-        consume_from_urlfilter_queue(channel, due_session)
+        memcache_client = utils.auth_memcache_db()
+
+        consume_from_urlfilter_queue(channel, due_session, memcache_client)
         try:
             channel.start_consuming()
         except KeyboardInterrupt as keyevent:

@@ -4,3 +4,4 @@ alembic==1.0.11
 pylint==2.3.1
 psycopg2==2.8.3
 aws-psycopg2==1.1.1
+pymemcache==2.2.2
